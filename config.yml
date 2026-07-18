@@ -15,10 +15,10 @@ model:
   # Absolute path to the folder containing your EXL3 model dirs (each dir = one model_name).
   model_dir: /path/to/exl3-serve/models
   # Name of the model subdir produced by scripts/download-model.sh (edit to match).
-  model_name: Qwen3.6-27B-exl3-400bpw
-  max_seq_len: 262144         # Qwen3.6 native 256K context
+  model_name: Qwen3.6-27B-exl3-4.0bpw
+  max_seq_len: 262144         # 256K — Qwen3.6 native max
   cache_size: 262144
-  cache_mode: Q8              # near-lossless 8-bit KV — fits 256K on 24 GB (fp16/Q6 also available)
+  cache_mode: Q4              # 4-bit KV — only mode that fits full 256K on 24 GB (~21.4 GB); Q6/Q8@256K OOM.
   chunk_size: 2048
   gpu_split_auto: true
 

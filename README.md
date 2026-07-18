@@ -2,7 +2,7 @@
 
 **One-command bootstrapper for serving EXL3-quantized LLMs via [ExLlamaV3](https://github.com/turboderp-org/exllamav3) + [TabbyAPI](https://github.com/theroyallab/tabbyAPI).**
 
-ExLlamaV3 is one of the strongest single-GPU inference engines for quality-per-bit and long context — but getting it running is fiddly: the torch / triton / flash-attn / exllamav3 versions have to line up exactly, MTP speculative decoding needs the right drafter head, and there's no built-in kernel warmup. `exl3-serve` encodes a **known-good stack** and a couple of scripts so you go from a bare GPU box to an OpenAI-compatible endpoint with **8-bit KV cache, full-length context, and MTP speculative decoding** in three commands.
+ExLlamaV3 is one of the strongest single-GPU inference engines for quality-per-bit and long context — but getting it running is fiddly: the torch / triton / flash-attn / exllamav3 versions have to line up exactly, MTP speculative decoding needs the right drafter head, and there's no built-in kernel warmup. `exl3-serve` encodes a **known-good stack** and a couple of scripts so you go from a bare GPU box to an OpenAI-compatible endpoint with a **quantized KV cache, long context, and MTP speculative decoding** in three commands.
 
 It was built and validated serving **Qwen3.6-27B (hybrid Gated-DeltaNet) at 256K context on a single 24 GB RTX 4090**, but nothing here is model-specific — point it at any EXL3 model.
 
@@ -90,13 +90,13 @@ wget -c "https://huggingface.co/<repo>/resolve/<revision>/model-00002-of-00002.s
 
 Everything lives in `config.yml` (copied into `tabbyAPI/` by `serve.sh`). Key knobs:
 
-- `cache_mode`: `Q8` (near-lossless, fits 256K on 24 GB), or `Q6` / `Q4` / `FP16` for other size/quality trade-offs.
+- `cache_mode`: on a 24 GB GPU with this 27B model, **`Q4` fits full 256K** (measured 21.7 GB); **`Q8`** is near-lossless but caps context at **~160K** (Q8/Q6 at 256K OOM). `FP16` for smaller contexts. See [COMPARISON.md §2](COMPARISON.md) for the measured fit table.
 - `max_seq_len` / `cache_size`: context length (KV cache is pre-allocated for the full size at load).
 - `draft_mode: mtp`: enable MTP speculative decoding (needs the compatible head).
 
 ## Why ExLlamaV3 for long-context serving
 
-Measured head-to-head against llama.cpp on Qwen3.6-27B @ 256K, single 24 GB GPU: EXL3 4.0bpw won on quality (8–14% lower perplexity), weight size, and decode speed (~2× with MTP), and uniquely fit **256K with 8-bit KV** where llama.cpp OOMs.
+Measured head-to-head against llama.cpp on Qwen3.6-27B @ 256K, single 24 GB GPU: EXL3 4.0bpw won on quality (8–14% lower perplexity), weight size (~2 GiB smaller), and decode speed (~2× with MTP). At 256K both engines are 4-bit-KV-bound (neither fits 8-bit on 24 GB — the fit is **256K/Q4, measured 21.7 GB**); EXL3's smaller weights additionally let it hold near-lossless 8-bit KV up to ~160K, where llama.cpp has less room.
 
 See **[COMPARISON.md](COMPARISON.md)** for the full benchmark tables, methodology, and operational notes.
 

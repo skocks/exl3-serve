@@ -4,6 +4,11 @@
 Description=exl3-serve — ExLlamaV3 + TabbyAPI OpenAI-compatible LLM server
 After=network-online.target
 Wants=network-online.target
+# If the model fails to load (e.g. cache_mode/context too large for VRAM), STOP after a couple of
+# tries. A tight restart loop of failed CUDA allocations can wedge the driver into an ERR! state
+# that only a reboot clears — so give up and surface the failure instead of hammering the GPU.
+StartLimitIntervalSec=120
+StartLimitBurst=2
 
 [Service]
 Type=simple
@@ -15,8 +20,11 @@ ExecStartPre=/bin/cp -f @ROOT@/config.yml @ROOT@/tabbyAPI/config.yml
 ExecStart=@ROOT@/.venv/bin/python main.py
 # Compile the triton kernels via a throwaway request so the first real request isn't cold.
 ExecStartPost=@ROOT@/scripts/warmup.sh
+# Restart only on unexpected crashes of an already-loaded server — NOT to retry a config that can't
+# fit. RestartSec is deliberately long so any retry can't become a GPU-wedging tight loop; the
+# StartLimit above caps total attempts.
 Restart=on-failure
-RestartSec=5
+RestartSec=30
 # Model load + first-time kernel JIT can take a few minutes.
 TimeoutStartSec=600
 
