@@ -38,9 +38,10 @@ export UV_HTTP_TIMEOUT="${UV_HTTP_TIMEOUT:-180}"
 log "Installing torch 2.7.1 (cu126)…"
 uv pip install "torch==2.7.1" --index-url https://download.pytorch.org/whl/cu126
 
-# exllamav3 master's paged-attn kernel uses a construct triton 3.3.x rejects → needs 3.4.
-log "Installing triton 3.4.0…"
-uv pip install "triton==3.4.0"
+# NOTE: triton 3.4.0 is pinned LAST (just before verify), not here. torch 2.7.1's wheel metadata
+# declares `triton==3.3.1`, so every later `uv pip install` re-resolves and snaps triton back to
+# 3.3.1 — a triton pin placed here gets silently clobbered by the flash-attn/exllamav3/TabbyAPI
+# installs below. Pinning it last makes 3.4.0 the final word. See the assertion in the verify step.
 
 # exllamav3 uses its own triton paged KV kernel unless flash-attn is present; without it, that
 # kernel fails to compile. flash-attn is required, not optional.
@@ -67,11 +68,21 @@ uv pip install \
   "formatron>=0.4.11" "kbnf>=0.4.1" aiofiles aiohttp async_lru huggingface_hub \
   psutil "httptools>=0.5.0" pillow requests uvloop setuptools
 
+# --- triton pin (LAST) ----------------------------------------------------
+# Must run after every other install: torch 2.7.1 declares triton==3.3.1, and each resolve above
+# reasserts it. This forces the validated 3.4.0 as the final state. uv may note the mismatch with
+# torch's declared pin; that's expected and harmless — flash-attn provides the attention path, so
+# torch never exercises a triton kernel that would care about the version.
+log "Pinning triton 3.4.0 (validated) as the final step…"
+uv pip install "triton==3.4.0"
+
 # --- verify ---------------------------------------------------------------
 log "Verifying the stack…"
 python - <<'PY'
 import torch, triton, flash_attn, exllamav3
 assert torch.cuda.is_available(), "CUDA not available"
+assert triton.__version__.startswith("3.4"), \
+    f"triton {triton.__version__} — expected 3.4.x; a later install clobbered the pin"
 print(f"  torch      {torch.__version__}")
 print(f"  triton     {triton.__version__}")
 print(f"  flash_attn {flash_attn.__version__}")
