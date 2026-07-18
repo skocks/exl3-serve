@@ -60,7 +60,7 @@ The working combination is narrow — most "just pip install it" attempts fail. 
 | Component | Version | Why not something else |
 |-----------|---------|------------------------|
 | **torch** | `2.7.1` (cu126) | 2.6's inductor breaks with triton ≥ 3.3 (`AttrsDescriptor` import error). |
-| **triton** | `3.4.0` | exllamav3 master's paged-attn kernel uses a construct triton 3.3.x rejects; 3.4 (on torch 2.7) works. |
+| **triton** | `3.4.0` | exllamav3 master's paged-attn kernel uses a construct triton 3.3.x rejects; 3.4 (on torch 2.7) works. torch 2.7.1 *declares* `triton==3.3.1`, so `install.sh` pins 3.4.0 as its **last** step — any earlier pin gets re-resolved back to 3.3.1 by later installs. The verify step asserts 3.4.x. |
 | **flash-attn** | `2.8.3` | Without it, exllamav3 falls back to a triton paged-attn kernel that fails to compile. Required, not optional. |
 | **exllamav3** | git `master` | The latest PyPI release (1.1.0) predates fixes needed for recent EXL3 features. |
 
