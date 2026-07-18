@@ -70,7 +70,10 @@ Everything lives in `config.yml` (copied into `tabbyAPI/` by `serve.sh`). Key kn
 
 ## Why ExLlamaV3 for long-context serving
 
-Measured head-to-head against llama.cpp on Qwen3.6-27B @ 256K, single 24 GB GPU: EXL3 4.0bpw won on quality (8–14% lower perplexity), weight size, and decode speed (~2× with MTP), and uniquely fit **256K with 8-bit KV** where llama.cpp OOMs. Full methodology and numbers: [`turboquant_plus/docs/qwen3.6-27b-4090-engine-comparison.md`](https://github.com/skocks/turboquant_plus/blob/main/docs/qwen3.6-27b-4090-engine-comparison.md).
+Measured head-to-head against llama.cpp on Qwen3.6-27B @ 256K, single 24 GB GPU: EXL3 4.0bpw won on quality (8–14% lower perplexity), weight size, and decode speed (~2× with MTP), and uniquely fit **256K with 8-bit KV** where llama.cpp OOMs.
+
+- **[COMPARISON.md](COMPARISON.md)** — benchmark addendum: the full tables (quality, VRAM, speed, MTP, multi-turn agentic latency).
+- Full methodology + operational notes: [`turboquant_plus/docs/qwen3.6-27b-4090-engine-comparison.md`](https://github.com/skocks/turboquant_plus/blob/main/docs/qwen3.6-27b-4090-engine-comparison.md).
 
 ## License
 
