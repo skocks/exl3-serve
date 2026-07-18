@@ -1,0 +1,24 @@
+# exl3-serve systemd unit template. Placeholders (@ROOT@, @TRITON_CACHE@) are filled in by
+# scripts/install-service.sh. Installed as a USER service by default (systemctl --user).
+[Unit]
+Description=exl3-serve — ExLlamaV3 + TabbyAPI OpenAI-compatible LLM server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=@ROOT@/tabbyAPI
+Environment=TRITON_CACHE_DIR=@TRITON_CACHE@
+Environment=HF_HUB_ENABLE_HXET=0
+# Sync the repo-root config into the TabbyAPI dir on each start.
+ExecStartPre=/bin/cp -f @ROOT@/config.yml @ROOT@/tabbyAPI/config.yml
+ExecStart=@ROOT@/.venv/bin/python main.py
+# Compile the triton kernels via a throwaway request so the first real request isn't cold.
+ExecStartPost=@ROOT@/scripts/warmup.sh
+Restart=on-failure
+RestartSec=5
+# Model load + first-time kernel JIT can take a few minutes.
+TimeoutStartSec=600
+
+[Install]
+WantedBy=default.target

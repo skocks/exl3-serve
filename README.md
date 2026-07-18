@@ -20,6 +20,32 @@ cd exl3-serve
 
 Then hit the OpenAI-compatible endpoint at `http://127.0.0.1:5000/v1`.
 
+## Run as a service
+
+To keep the server running under systemd (auto-restart, boot-start, journald logs):
+
+```bash
+./scripts/install-service.sh              # user service (default) — no root
+# or:
+./scripts/install-service.sh --system     # system-wide service (starts at boot), needs sudo
+```
+
+The default is a **user service** (`systemctl --user`), installed to `~/.config/systemd/user/exl3-serve.service`. It restarts on failure and runs the warmup at startup so the first request is never cold.
+
+```bash
+systemctl --user status exl3-serve        # check
+journalctl --user -u exl3-serve -f        # follow logs
+systemctl --user restart exl3-serve
+```
+
+A user service only runs while you're logged in. To start it at boot **without** an active login session, enable lingering once:
+
+```bash
+sudo loginctl enable-linger $USER
+```
+
+Run `./install.sh` and `./scripts/download-model.sh` and set `config.yml` **before** installing the service.
+
 ## Requirements
 
 - NVIDIA GPU + driver (CUDA 12.x-capable). Validated on Ada (RTX 4090, 24 GB).

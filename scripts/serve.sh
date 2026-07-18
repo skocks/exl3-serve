@@ -25,17 +25,8 @@ echo "[serve] starting TabbyAPI on http://$HOST:$PORT …"
 SERVER_PID=$!
 trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
 
-echo "[serve] waiting for the server to become healthy…"
-until curl -sf "http://$HOST:$PORT/health" >/dev/null 2>&1; do
-  kill -0 $SERVER_PID 2>/dev/null || { echo "[serve] server exited during startup"; exit 1; }
-  sleep 2
-done
-
-echo "[serve] warming triton kernels (throwaway generation)…"
-curl -s "http://$HOST:$PORT/v1/chat/completions" \
-  -H 'Content-Type: application/json' \
-  -d "{\"model\":\"$MODEL_NAME\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}],\"max_tokens\":8,\"stream\":false}" \
-  >/dev/null || true
+echo "[serve] waiting for health + warming triton kernels…"
+HOST="$HOST" PORT="$PORT" ./scripts/warmup.sh
 
 echo "[serve] ready and warm — first real request will be fast. OpenAI endpoint: http://$HOST:$PORT/v1"
 wait $SERVER_PID
