@@ -1,0 +1,10 @@
+# Python venv
+.venv/
+
+# Downloaded models (large) and the cloned TabbyAPI app
+models/
+tabbyAPI/
+
+# Local overrides / logs
+*.log
+config.local.yml

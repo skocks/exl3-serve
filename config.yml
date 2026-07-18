@@ -1,0 +1,30 @@
+# TabbyAPI config for exl3-serve — validated for Qwen3.6-27B @ 256K on a single 24 GB GPU.
+# Copy to tabbyAPI/config.yml (scripts/serve.sh does this automatically).
+
+network:
+  host: 127.0.0.1
+  port: 5000
+  disable_auth: true          # local use; set false + configure api_tokens.yml for exposed deployments
+  api_servers: ["OAI"]
+
+logging:
+  log_prompt: false
+  log_generation_params: false
+
+model:
+  # Absolute path to the folder containing your EXL3 model dirs (each dir = one model_name).
+  model_dir: /path/to/exl3-serve/models
+  # Name of the model subdir produced by scripts/download-model.sh (edit to match).
+  model_name: Qwen3.6-27B-exl3-400bpw
+  max_seq_len: 262144         # Qwen3.6 native 256K context
+  cache_size: 262144
+  cache_mode: Q8              # near-lossless 8-bit KV — fits 256K on 24 GB (fp16/Q6 also available)
+  chunk_size: 2048
+  gpu_split_auto: true
+
+draft_model:
+  draft_mode: mtp             # multi-token-prediction speculative decoding (~2x decode)
+  draft_cache_mode: Q8        # requires a compatible bf16 MTP head in the model dir (see download script)
+
+developer:
+  unsafe_launch: false
