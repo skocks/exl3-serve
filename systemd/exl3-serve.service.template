@@ -17,6 +17,8 @@ Environment=TRITON_CACHE_DIR=@TRITON_CACHE@
 Environment=HF_HUB_ENABLE_HXET=0
 # Sync the repo-root config into the TabbyAPI dir on each start.
 ExecStartPre=/bin/cp -f @ROOT@/config.yml @ROOT@/tabbyAPI/config.yml
+# Sync repo-root sampler-override presets (config.yml -> sampling.override_preset) too.
+ExecStartPre=/bin/sh -c 'mkdir -p @ROOT@/tabbyAPI/sampler_overrides && cp -f @ROOT@/sampler_overrides/*.yml @ROOT@/tabbyAPI/sampler_overrides/ 2>/dev/null || true'
 ExecStart=@ROOT@/.venv/bin/python main.py
 # Compile the triton kernels via a throwaway request so the first real request isn't cold.
 ExecStartPost=@ROOT@/scripts/warmup.sh

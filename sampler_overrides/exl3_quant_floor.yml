@@ -1,0 +1,24 @@
+# Sampler floor for the 4.0bpw / Q4-KV-cache exl3 deployment.
+#
+# Why: at long context the Q4 KV cache + 4-bit weights accumulate quantization
+# error that can occasionally push a rare off-distribution token (e.g. a foreign
+# multilingual BPE piece) above the intended one — the "garble" seen 2026-07-19
+# (`renameเปล`, `CambioPolitik`). A min_p floor clips that low-probability tail
+# without touching the model.
+#
+# min_p is forced so the floor holds even when a client sends min_p=0 (many
+# agent clients do). temperature/top_p stay fallback-only (force:false) — they
+# apply only when the request omits them, so explicit request sampling is
+# unchanged.
+
+min_p:
+  override: 0.05
+  force: true
+
+temperature:
+  override: 0.8
+  force: false
+
+top_p:
+  override: 0.9
+  force: false

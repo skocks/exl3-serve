@@ -18,6 +18,12 @@ PORT="${PORT:-5000}"
 
 # config.yml lives at repo root; TabbyAPI expects it inside its own dir.
 cp -f config.yml tabbyAPI/config.yml
+# Sampler-override presets referenced by config.yml (sampling.override_preset)
+# also live at repo root; mirror them into TabbyAPI's working dir.
+if [ -d sampler_overrides ]; then
+  mkdir -p tabbyAPI/sampler_overrides
+  cp -f sampler_overrides/*.yml tabbyAPI/sampler_overrides/ 2>/dev/null || true
+fi
 MODEL_NAME="$(grep -E '^\s*model_name:' config.yml | awk '{print $2}')"
 
 echo "[serve] starting TabbyAPI on http://$HOST:$PORT …"
