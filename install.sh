@@ -5,7 +5,7 @@
 # with MTP speculative decoding and an 8-bit KV cache on a single 24 GB GPU. The combo is narrow
 # on purpose — see README "Why these exact versions".
 #
-#   torch 2.7.1 (cu126)  +  triton 3.4.0  +  flash-attn 2.8.3  +  exllamav3 (git master)
+#   torch 2.7.1 (cu126)  +  triton 3.4.0  +  flash-attn 2.8.3  +  exllamav3 1.2.1 (git master)
 #
 # Usage: ./install.sh
 set -euo pipefail
@@ -50,7 +50,8 @@ uv pip install numpy
 MAX_JOBS="${MAX_JOBS:-8}" uv pip install flash-attn --no-build-isolation
 
 # --- exllamav3 (git master) ----------------------------------------------
-# The latest PyPI release (1.1.0) predates fixes needed here. Master builds the CUDA ext from source.
+# Validated at v1.2.1 (2026-07-27) — brings dynamic draft window for MTP VRAM savings,
+# faster safetensors loading, and general performance tuning. Master builds the CUDA ext from source.
 log "Building exllamav3 from git master (CUDA extension compile — this takes 10-20 min)…"
 uv pip install ninja
 MAX_JOBS="${MAX_JOBS:-8}" uv pip install "git+https://github.com/turboderp-org/exllamav3.git" --no-build-isolation
@@ -65,7 +66,7 @@ log "Installing TabbyAPI server dependencies (excluding torch/exllamav3)…"
 uv pip install \
   "fastapi-slim>=0.115" "pydantic>=2.11,<3" ruamel.yaml rich "uvicorn>=0.28.1" \
   "jinja2>=3.0.0" loguru "sse-starlette>=2.2.0" packaging "tokenizers>=0.21.0" \
-  "formatron>=0.4.11" "kbnf>=0.4.1" aiofiles aiohttp async_lru huggingface_hub \
+  "formatron>=0.5.0" "kbnf>=0.4.2" aiofiles aiohttp async_lru huggingface_hub \
   psutil "httptools>=0.5.0" pillow requests uvloop setuptools
 
 # --- triton pin (LAST) ----------------------------------------------------

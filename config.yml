@@ -19,26 +19,29 @@ model:
   model_dir: /path/to/exl3-serve/models
   # Name of the model subdir produced by scripts/download-model.sh (edit to match).
   model_name: Qwen3.6-27B-exl3-4.0bpw
-  max_seq_len: 262144         # 256K — Qwen3.6 native max
-  cache_size: 262144
-  cache_mode: Q4              # 4-bit KV — only mode that fits full 256K on 24 GB (~21.4 GB); Q6/Q8@256K OOM.
+  max_seq_len: 204800         # 200K — best config: Q6 KV + 200K context
+  cache_size: 204800
+  cache_mode: Q6              # 6-bit KV — near-lossless; no min_p workaround needed
   chunk_size: 2048
   gpu_split_auto: true
-  tool_format: qwen3_coder     # parse the model's <tool_call><function=…><parameter=…> XML into structured tool_calls; blank = tool calls returned as plain text
-  reasoning: true              # parse <think>…</think> into reasoning_content instead of leaking into content
+  tool_format: qwen3_coder     # parse the model's XML into structured tool_calls; blank = tool calls returned as plain text
+  reasoning: true              # parse <think> tags into reasoning_content instead of leaking into content
   reasoning_start_token: "<think>"
   reasoning_end_token: "</think>"
+  vision: true
 
+# MTP speculative decoding (exllamav3 >= 1.2.0 dynamic draft window).
+# The dynamic draft window shrinks the draft cache to fit within remaining VRAM, but
+# Q8 draft cache at 256K still OOMs on 24 GB (2026-07-29 test). Q4 + draft_num_tokens=1 fits.
 draft_model:
   draft_mode: mtp             # multi-token-prediction speculative decoding (~2x decode)
-  draft_cache_mode: Q8        # requires a compatible bf16 MTP head in the model dir (see download script)
+  draft_cache_mode: Q4        # Q4 is the max that fits alongside Q6 main cache @ 200K
+  draft_num_tokens: 3         # kept at 3 for VRAM headroom with vision + Q6 cache @ 200K
 
 sampling:
-  # Forces a min_p=0.05 floor to clip the rare off-distribution token tail that
-  # Q4-KV-cache quantization noise can surface at long context (garble seen
-  # 2026-07-19). temperature/top_p in the preset are fallback-only. See
-  # sampler_overrides/exl3_quant_floor.yml for rationale.
-  override_preset: exl3_quant_floor
+  # min_p=0.05 override not needed with Q6 KV cache.
+  # Re-enable if switching back to Q4:  override_preset: exl3_quant_floor
+  # override_preset: exl3_quant_floor
 
 developer:
   unsafe_launch: false
