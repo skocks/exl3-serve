@@ -16,14 +16,9 @@ export TRITON_CACHE_DIR="${TRITON_CACHE_DIR:-$HOME/.triton/cache}"
 HOST="${HOST:-127.0.0.1}"
 PORT="${PORT:-5000}"
 
-# config.yml lives at repo root; TabbyAPI expects it inside its own dir.
-cp -f config.yml tabbyAPI/config.yml
-# Sampler-override presets referenced by config.yml (sampling.override_preset)
-# also live at repo root; mirror them into TabbyAPI's working dir.
-if [ -d sampler_overrides ]; then
-  mkdir -p tabbyAPI/sampler_overrides
-  cp -f sampler_overrides/*.yml tabbyAPI/sampler_overrides/ 2>/dev/null || true
-fi
+# config.yml lives at repo root and carries @MODEL_DIR@; render it (and the
+# sampler-override presets) into TabbyAPI's own dir.
+./scripts/render-config.sh
 MODEL_NAME="$(grep -E '^\s*model_name:' config.yml | awk '{print $2}')"
 
 echo "[serve] starting TabbyAPI on http://$HOST:$PORT …"

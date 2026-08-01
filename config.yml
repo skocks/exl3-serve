@@ -17,7 +17,10 @@ logging:
 
 model:
   # Absolute path to the folder containing your EXL3 model dirs (each dir = one model_name).
-  model_dir: /path/to/exl3-serve/models
+  # Substituted by scripts/render-config.sh (default: <repo>/models, matching
+  # scripts/download-model.sh). Override with EXL3_MODEL_DIR=/mnt/models.
+  # TabbyAPI does not expand ~ or $VARS here, so it must land as a literal path.
+  model_dir: @MODEL_DIR@
   # Name of the model subdir produced by scripts/download-model.sh (edit to match).
   model_name: Qwen3.6-27B-exl3-4.0bpw
   max_seq_len: 131072         # 128K — trimmed from 180K to free ~2 GB VRAM for surya-2 OCR GPU offload (2026-07-31)

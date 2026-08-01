@@ -15,10 +15,11 @@ Type=simple
 WorkingDirectory=@ROOT@/tabbyAPI
 Environment=TRITON_CACHE_DIR=@TRITON_CACHE@
 Environment=HF_HUB_ENABLE_HXET=0
-# Sync the repo-root config into the TabbyAPI dir on each start.
-ExecStartPre=/bin/cp -f @ROOT@/config.yml @ROOT@/tabbyAPI/config.yml
-# Sync repo-root sampler-override presets (config.yml -> sampling.override_preset) too.
-ExecStartPre=/bin/sh -c 'mkdir -p @ROOT@/tabbyAPI/sampler_overrides && cp -f @ROOT@/sampler_overrides/*.yml @ROOT@/tabbyAPI/sampler_overrides/ 2>/dev/null || true'
+# Render the repo-root config (substituting @MODEL_DIR@) and mirror the
+# sampler-override presets into the TabbyAPI dir on each start. Same script
+# scripts/serve.sh uses, so both launch paths substitute identically.
+# Set EXL3_MODEL_DIR above if the models do not live in @ROOT@/models.
+ExecStartPre=@ROOT@/scripts/render-config.sh
 ExecStart=@ROOT@/.venv/bin/python main.py
 # Compile the triton kernels via a throwaway request so the first real request isn't cold.
 ExecStartPost=@ROOT@/scripts/warmup.sh
