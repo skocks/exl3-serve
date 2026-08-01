@@ -8,3 +8,7 @@ tabbyAPI/
 # Local overrides / logs
 *.log
 config.local.yml
+
+# Python bytecode
+__pycache__/
+*.pyc
